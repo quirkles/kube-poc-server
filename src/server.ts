@@ -1,5 +1,9 @@
 import fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
+import {getAppConfig} from "./config";
+import * as process from "node:process";
+
+const config = getAppConfig()
 
 // Create Fastify instance
 const server: FastifyInstance = fastify({
@@ -7,8 +11,15 @@ const server: FastifyInstance = fastify({
 });
 
 // Register plugins
-server.register(cors, {
-  origin: true, // Allow all origins
+server.register(cors, () => {
+  let allowedOrigin = config.env === 'local' ? true : config.frontendUrl;
+  server.log.info(`Configuring CORS`, {
+      allowedOrigin,
+      environment: config.env
+  })
+  return {
+    origin: allowedOrigin,
+  }
 });
 
 // Define a route
